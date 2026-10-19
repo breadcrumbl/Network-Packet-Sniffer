@@ -13,16 +13,17 @@
 #include <vector>   // For storing data bytes
 
 
-void parse_packet(const Packet& packet) {
+ParsedPacket parse_packet(const CapturedPacket& raw) {
+    ParsedPacket parsed {};
     // Parse time 
 
     // Parse Ethernet header
-    auto header { parse_ethernet(packet) };
-    if (!header) {
-        return;
+    auto ethernet { parse_ethernet(raw) };
+    if (!ethernet) {
+        return parsed;
     }
     // * accesses EthernetHeader in std::optional<EthernetHeader>
-    print_ethernet(*header);
+    parsed.ethernet = *ethernet;
 
     // Parse IP layer
 
@@ -30,6 +31,7 @@ void parse_packet(const Packet& packet) {
 
     // Parse payload
 
+    return parsed;
 }
 
 

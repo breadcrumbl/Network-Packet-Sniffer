@@ -26,4 +26,4 @@ struct EthernetHeader {
 };
 
 // Function declarations
-std::optional<EthernetHeader> parse_ethernet(const Packet& packet);
+std::optional<EthernetHeader> parse_ethernet(const CapturedPacket& packet);

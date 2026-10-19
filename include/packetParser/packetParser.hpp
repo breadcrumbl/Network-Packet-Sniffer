@@ -2,7 +2,11 @@
 
 // My other headers
 #include "packetCapture/packetCapture.hpp"  // For Packet struct
+#include "packetParser/ethernetParser.hpp"  // For EthernetHeader struct
 
+struct ParsedPacket {
+    EthernetHeader ethernet {};
+};
 
 // Function declarations
-void parse_packet(const Packet& packet);
+ParsedPacket parse_packet(const CapturedPacket& packet);

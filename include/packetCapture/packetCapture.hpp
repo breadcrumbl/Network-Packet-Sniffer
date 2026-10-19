@@ -12,7 +12,7 @@
 *	bpf_u_int32 len;	// length of this packet (off wire)
 * };
 */
-struct Packet {
+struct CapturedPacket {
     pcap_pkthdr header {};
     std::vector<u_char> data {};
 };

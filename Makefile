@@ -20,6 +20,7 @@ TARGET = PacketSniffer.exe
 # Finds every .cpp file inside of src/
 SOURCES = 	$(wildcard $(SRC_DIR)/*.cpp) \
 			$(wildcard $(SRC_DIR)/packetCapture/*.cpp) \
+			$(wildcard $(SRC_DIR)/packetFormat/*.cpp) \
 			$(wildcard $(SRC_DIR)/packetParser/*.cpp) \
 			$(wildcard $(SRC_DIR)/packetPrinter/*.cpp)
 			

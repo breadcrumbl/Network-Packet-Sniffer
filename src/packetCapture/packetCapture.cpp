@@ -1,7 +1,9 @@
 // Paired header
 #include "packetCapture/packetCapture.hpp"
 // My other headers
-#include "packetParser/packetParser.hpp"
+#include "packetParser/packetParser.hpp"    // For ParsedPacket struct
+#include "packetPrinter/packetPrinter.hpp"  // To print formatted packet
+#include "packetFormat/packetFormat.hpp"    // For FormattedPacket struct
 // 3rd party headers
 #include <pcap.h> 
 // Standard library headers
@@ -96,9 +98,9 @@ void capture_packets(pcap_t*& handle) {
         }
 
         // Copy packet data into packet structure
-        Packet packet {};
+        CapturedPacket raw {};
         // * dereferences header so actual content is copied, not just the pointer
-        packet.header = *header;    
+        raw.header = *header;    
         /*
         * This statement fills the packet data vector with the bytes captured. Breakdown:
         *   assign(first, last): accepts a range of elements and replaces the vector's contents with copies of those elements
@@ -106,10 +108,11 @@ void capture_packets(pcap_t*& handle) {
         *   header->caplen: number of bytes captured
         *   pkt_data + header->caplen: pointer just past end of of data (pointer arithmetic)
         */
-        packet.data.assign(pkt_data, pkt_data + header->caplen);
+        raw.data.assign(pkt_data, pkt_data + header->caplen);
 
-        // Parse packet
-        parse_packet(packet);
+        ParsedPacket parsed { parse_packet(raw) };
+        FormattedPacket formatted { format_packet(parsed) };
+        print_packet(formatted);
         
     }
 
