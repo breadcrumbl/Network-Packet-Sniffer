@@ -9,14 +9,14 @@
 
 
 // Reads the first 14 bytes of header to a EthernetHeader struct, return this if successful, std::nullopt if not
-std::optional<EthernetHeader> parse_ethernet(const CapturedPacket& packet) {
+std::optional<ParsedEthernet> parse_ethernet(const CapturedPacket& packet) {
     // Check size
-    if (packet.data.size() < EthernetHeader::ethernet_header_min_size) {
+    if (packet.data.size() < ParsedEthernet::ethernet_header_min_size) {
         printf("Packet too short for Ethernet header\n");
         return std::nullopt;
     }
     // Ethernet header to be returned
-    EthernetHeader ethernet {};
+    ParsedEthernet ethernet {};
     // Pointer to first byte of data
     // Note: const <type>* <name> -> data cannot be modified but ptr can; <type>* const <name> -> ptr cannot be modifed but data can
     const u_char* data_ptr { packet.data.data() };

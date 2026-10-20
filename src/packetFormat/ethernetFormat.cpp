@@ -1,15 +1,14 @@
 // Paired header
 #include "packetFormat/ethernetFormat.hpp"
 // My other headers
-#include "packetParser/ethernetParser.hpp"  // For EthernetHeader struct
+#include "packetParser/ethernetParser.hpp"  // For ParsedEthernet struct
 //Standard library headers
 #include <cstdint>  // For uint16_t for Ether Type
-#include <cstdio>   // For printf
-#include <cstring>  // For c_str (for passing strings to printf)
-#include <iomanip>  // For string manipulation
-#include <string>
+#include <iomanip>  // For i/o manipulation (std::hex, std::uppercase, std::setfill, etc.)
+#include <sstream>  // For std::ostringstream (streams that read or write to strings)
+#include <string>   // To convert to ostringstream to standard C++ string
 
-FormattedEthernet format_ethernet(const EthernetHeader& ethernet){
+FormattedEthernet format_ethernet(const ParsedEthernet& ethernet){
     FormattedEthernet formatted {};
     formatted.dest = mac_to_string(ethernet.dest_mac);
     formatted.src = mac_to_string(ethernet.src_mac);

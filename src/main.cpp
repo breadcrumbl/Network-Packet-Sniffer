@@ -1,5 +1,6 @@
 
-#include "packetCapture/packetCapture.hpp"
+#include "packetCapture/captureSession.hpp" // To open device
+#include "packetCapture/packetCapture.hpp"  // To capture packets
 
 #include <pcap.h> 
 
@@ -34,7 +35,7 @@ int main()
     }
 
     // Capture packets
-    capture_packets(handle);
+    run_capture_session(handle);
 
     // Free the device list 
     pcap_freealldevs(alldevs);

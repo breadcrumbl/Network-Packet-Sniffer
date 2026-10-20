@@ -1,123 +1,75 @@
 // Paired header
 #include "packetCapture/packetCapture.hpp"
 // My other headers
-#include "packetParser/packetParser.hpp"    // For ParsedPacket struct
-#include "packetPrinter/packetPrinter.hpp"  // To print formatted packet
-#include "packetFormat/packetFormat.hpp"    // For FormattedPacket struct
+
 // 3rd party headers
-#include <pcap.h> 
+#include <pcap.h>   // For pcap_next_ex()
 // Standard library headers
-#include <cstdio>
+#include <chrono>   // For timestamp
+#include <optional> // For std::optional
 
-// Return a pointer to device list if successful, nullptr otherwise
-pcap_if_t* get_device_list() {
-    pcap_if_t *alldevs { nullptr };
-    char errbuf[PCAP_ERRBUF_SIZE]{};
 
-    // Retrieve the device list from the local machine
-    if (pcap_findalldevs_ex(PCAP_SRC_IF_STRING,
-        NULL /* auth is not needed */,
-        &alldevs, errbuf) == -1) {
-        fprintf(stderr, "Error in pcap_findalldevs_ex: %s\n", errbuf);
-        return nullptr;
-    }
-    return alldevs;
-}
-
-// Function that accepts list of available devices as an argument, prints them, then gets the user to choose one
-// Returns a pointer to the device if succesfull and nullptr if not
-pcap_if_t* get_device(pcap_if_t*& alldevs) {
-    // Print the list of available devices
-    int device_count { 0 };
-    for(pcap_if_t* d { alldevs }; d != nullptr; d = d->next) {
-        printf("%d. %s", ++device_count, d->name); {}
-        if (d->description) {
-            printf("(%s)\n", d->description);
-        }
-        else {
-            printf("(No description available)\n");
-        }
-    }
-    if (device_count == 0) {
-        printf("\nNo interfaces found! Make sure Npcap is installed.\n");
-        return nullptr;
-    }
-
-    // Get user input
-    int input_number {};
-    printf("Enter the interface number (1-%d):",device_count);
-    scanf_s("%d", &input_number);
-    if(input_number < 1 || input_number > device_count) {
-        printf("\nInterface number out of range.\n");
-        return nullptr;
-    }
-
-    // Jump to the selected adapter and return the pointer to it
-    pcap_if_t* device_ptr { alldevs };
-    for(int i { 0 }; i < input_number - 1; ++i) {
-        device_ptr = device_ptr->next;
-    }
-    return device_ptr;
-}
-
-// Open device using pcap_open. Return 
-pcap_t* open_device(pcap_if_t*& device) {
-    pcap_t *handle { nullptr };
-    char errbuf[PCAP_ERRBUF_SIZE]{};
-    if ((handle = pcap_open(device->name, // name of the device
-            65536, // portion of the packet to capture
-                    // 65536 guarantees that the whole packet will
-                    // be captured on all the link layers
-            PCAP_OPENFLAG_PROMISCUOUS, // promiscuous mode
-            1000, // read timeout
-            NULL, // authentication on the remote machine
-            errbuf // error buffer
-            )) == NULL) {
-        fprintf(stderr, "\nUnable to open the adapter. %s is not supported by Npcap\n", device->name);
-        return nullptr;
-    }
-    printf("\nListening on %s...\n", device->description);
-    return handle;
-}
-
-void capture_packets(pcap_t*& handle) {
+std::optional<CapturedPacket> capture_packet(pcap_t* handle)
+{
     /*
     * pcpap_next_ex() returns       ->     while() loop behaviour
     *     1: packet captured        ->     process packet (print details)
     *     0: timeout                ->     keep listening
     *     -1: capture error         ->     break out of loop and report error
-    *     -2: end of file for an offline capture    ->    break out of loop  
+    *     -2: end of file for an offline capture    ->    break out of loop 
+    * pcap_next_ex() paramaters:
+    *      handle ->  
+    *      &header -> address of a pointer that Npcap sets to the packet's metadata
+    *      &pkt_data -> Address of a pointer that Npcap sets to the packet's raw bytes
     */
-    int res {};
     pcap_pkthdr* header { nullptr };
     const u_char* pkt_data { nullptr };
-    while((res = pcap_next_ex(handle, &header, &pkt_data)) >= 0) {
-        // If timeout, keep listening
-        if(res == 0) {
-        continue;
-        }
-
-        // Copy packet data into packet structure
-        CapturedPacket raw {};
-        // * dereferences header so actual content is copied, not just the pointer
-        raw.header = *header;    
-        /*
-        * This statement fills the packet data vector with the bytes captured. Breakdown:
-        *   assign(first, last): accepts a range of elements and replaces the vector's contents with copies of those elements
-        *   pkt_data: points to the first byte of the data
-        *   header->caplen: number of bytes captured
-        *   pkt_data + header->caplen: pointer just past end of of data (pointer arithmetic)
-        */
-        raw.data.assign(pkt_data, pkt_data + header->caplen);
-
-        ParsedPacket parsed { parse_packet(raw) };
-        FormattedPacket formatted { format_packet(parsed) };
-        print_packet(formatted);
-        
+    int res { pcap_next_ex(handle, &header, &pkt_data) };
+    // Timeout: no packet available yet.
+    if (res == 0) {
+        return std::nullopt;
+    }
+    // Capture error or end of offline capture
+    if (res == -1 || res == -2) {
+        return std::nullopt;
     }
 
-    // If error, print
-    if (res == -1) {
-        printf("Error reading the packets: %s\n", pcap_geterr(handle));
-    }
+    // Convert Npcap metadata into our own C++ types
+    /*
+    * Relevant Npcap structures
+    * struct pcap_pkthdr {
+    *	struct timeval ts;	// time stamp 
+    *	bpf_u_int32 caplen;	// length of portion present i.e. how many bytes captured
+    *	bpf_u_int32 len;	// length of this packet (off wire) i.e. original length reported; can be greater than caplen due to truncation
+    * };
+    * struct timeval {
+    *	long tv_sec;    // Whole seconds    
+    *	long tv_usec;   // Additional microseconds
+    * };
+    */
+    CapturedPacket raw {};
+    // Creating the timestamp
+    // General knowledge: 
+    //  The Unix epoch is a fixed point in time (1 January 1970 at 00:00:00 UTC)
+    //  Computers often represent timestamps as the number of seconds elasped fromt this point (i.e. as a duration)
+    // How the program works:
+    //  1. chrono::seconds and microsends -> Wraps the seconds and microsends in header in a C++ duration
+    //  2. adds the two together
+    //  3. Constructs a time point from the resulting duration since the clock's epoch
+    raw.time = std::chrono::system_clock::time_point {
+        std::chrono::seconds { header->ts.tv_sec } +
+        std::chrono::microseconds { header->ts.tv_usec }
+    };
+    raw.captured_length = header->caplen;
+    raw.original_length = header->len;
+    /*
+    * This statement fills the packet data vector with the bytes captured. Breakdown:
+    *   assign(first, last): accepts a range of elements and replaces the vector's contents with copies of those elements
+    *   pkt_data: points to the first byte of the data
+    *   header->caplen: number of bytes captured
+    *   pkt_data + header->caplen: pointer just past end of of data (pointer arithmetic)
+    */
+    raw.data.assign(pkt_data, pkt_data + header->caplen);
+
+    return raw;
 }

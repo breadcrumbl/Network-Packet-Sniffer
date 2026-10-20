@@ -16,13 +16,14 @@
 ParsedPacket parse_packet(const CapturedPacket& raw) {
     ParsedPacket parsed {};
     // Parse time 
+    parsed.time = raw.time;
 
     // Parse Ethernet header
     auto ethernet { parse_ethernet(raw) };
     if (!ethernet) {
         return parsed;
     }
-    // * accesses EthernetHeader in std::optional<EthernetHeader>
+    // * accesses EthernetHeader in std::optional<ParsedEthernet>
     parsed.ethernet = *ethernet;
 
     // Parse IP layer

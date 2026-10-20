@@ -1,13 +1,13 @@
 #pragma once
 
 // My other headers
-#include "packetCapture/packetCapture.hpp"    // For Packet struct
+#include "packetCapture/packetCapture.hpp"    // For CapturedPacket struct
 // Standard library headers
 #include <cstdint>  // For uint16_t for Ether Type
 #include <optional> // For non-valid function returns
 #include <vector>   // For storing MAC address bytes
 
-struct EthernetHeader { 
+struct ParsedEthernet { 
     // Static member variables (shared by all members of the class rather than each member getting its own copy)
     // Ethernet II headers need at least 14 bytes
     static constexpr int ethernet_header_min_size { 14 };
@@ -20,10 +20,10 @@ struct EthernetHeader {
     // EtherType:       bytes 12-13
     // Note direct initialisation (e.g. destMAC(6)) is not allowed for member defualt initiliasers
     // Must use list initiliasion: create the std::vector with desired length and use this as initaliser
-    std::vector<u_char> dest_mac { std::vector<u_char>( mac_size ) };
-    std::vector<u_char> src_mac { std::vector<u_char>( mac_size ) };
+    std::vector<u_char> dest_mac { std::vector<std::uint8_t>( mac_size ) };
+    std::vector<u_char> src_mac { std::vector<std::uint8_t>( mac_size ) };
     std::uint16_t ether_type {};
 };
 
 // Function declarations
-std::optional<EthernetHeader> parse_ethernet(const CapturedPacket& packet);
+std::optional<ParsedEthernet> parse_ethernet(const CapturedPacket& packet);
