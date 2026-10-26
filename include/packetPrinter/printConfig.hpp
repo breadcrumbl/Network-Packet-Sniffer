@@ -8,4 +8,10 @@
 //          -> external linkage by definition (linker can see them so can check definitions match)
 namespace PrintConfig {
     inline constexpr int print_space { 4 };
+
+
+}
+
+namespace ColumnWidth {
+    inline constexpr int time { 19 };
 }

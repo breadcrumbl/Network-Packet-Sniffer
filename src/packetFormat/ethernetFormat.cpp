@@ -3,7 +3,7 @@
 // My other headers
 #include "packetParser/ethernetParser.hpp"  // For ParsedEthernet struct
 //Standard library headers
-#include <cstdint>  // For uint16_t for Ether Type
+#include <cstdint>  // For std int types
 #include <iomanip>  // For i/o manipulation (std::hex, std::uppercase, std::setfill, etc.)
 #include <sstream>  // For std::ostringstream (streams that read or write to strings)
 #include <string>   // To convert to ostringstream to standard C++ string
@@ -13,12 +13,12 @@ FormattedEthernet format_ethernet(const ParsedEthernet& ethernet){
     formatted.dest = mac_to_string(ethernet.dest_mac);
     formatted.src = mac_to_string(ethernet.src_mac);
     formatted.ether_type = ether_type_to_string(ethernet.ether_type);
-    formatted.protocol = protocol_string(ethernet.ether_type);
+    formatted.protocol = ethernet_protocol_string(ethernet.ether_type);
     return formatted;
 }
 
 // For converting destination and source MAC addresses to strings with format: XX:XX:XX:XX:XX:XX (hexadecimal)
-std::string mac_to_string(const std::vector<u_char>& mac_addr) {
+std::string mac_to_string(const std::vector<uint8_t>& mac_addr) {
     // Create a string stream
     std::ostringstream mac_str {};
     // Configure output: 
@@ -48,7 +48,7 @@ std::string ether_type_to_string(const uint16_t ether_type) {
 }
 
 // For returning the protocol based on ether type
-std::string protocol_string(const uint16_t ether_type) {
+std::string ethernet_protocol_string(const uint16_t ether_type) {
     if (ether_type == 0x0800) {
         return "IPv4";
     }

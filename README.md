@@ -36,3 +36,6 @@ packetCapture
 - pcap_if_t* get_device_list(): returns a pointer to a linked list of available devices (interfaces / adapters) if successful, otherwise returns nullptr
 - pcap_if_t* get_device(pcap_if_t*& alldevs): takes in user input from the console to choose a device from the device list and returns a pointer to that device is successful, other returns nullptr
 - pcap_t* open_device(pcap_if_t*& device): opens a capture session on the device, which continuously listens, captures, and processes packets until user ends program (e.g. ctrl+c) or a capture error occurs
+
+
+

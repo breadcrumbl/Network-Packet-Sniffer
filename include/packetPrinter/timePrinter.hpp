@@ -4,4 +4,4 @@
 #include <string>
 
 // Function declarations
-void print_time(std::string timestamp);
+void print_time(std::string time);

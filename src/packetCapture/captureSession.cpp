@@ -10,6 +10,8 @@
 // Standard library headers
 #include <cstdio>
 
+#include <iostream>     // For debugging
+
 // Return a pointer to device list if successful, nullptr otherwise
 pcap_if_t* get_device_list() {
     pcap_if_t *alldevs { nullptr };
@@ -94,5 +96,7 @@ void run_capture_session(pcap_t*& handle) {
     ParsedPacket parsed { parse_packet(*raw) };
     FormattedPacket formatted { format_packet(parsed) };
     print_packet(formatted);
+    //std::cout << static_cast<int>(parsed.ipv4.ttl) << std::endl;
+    // std::cout << "Formatted TTL: [" << formatted.ipv4.ttl << "]\n";
     }
 }
