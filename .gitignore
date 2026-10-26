@@ -2,6 +2,10 @@
 # Compiled executables
 *.exe
 
+# Compiled object files and generated dependencies
+*.o
+*.d
+
 # Debug/build output
 build/
 bin/
