@@ -10,10 +10,11 @@
 
 struct FormattedPacket {
     std::string time {};
-    FormattedEthernet ethernet {};
-    FormattedIPv4 ipv4 {};
-    FormattedUDP udp {};
-    FormattedTCP tcp {};
+    FormattedEthernet* ethernet {};
+    FormattedIPv4* ipv4 {};
+    FormattedUDP* udp {};
+    FormattedTCP* tcp {};
 };
 
 FormattedPacket format_packet(const ParsedPacket& captured);
+void cleanup_formatted_packet(FormattedPacket& formatted);

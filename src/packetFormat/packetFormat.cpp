@@ -14,16 +14,37 @@ FormattedPacket format_packet(const ParsedPacket& parsed) {
     formatted.time = format_time(parsed.time);
 
     // Format ethernet header
-    formatted.ethernet = format_ethernet(parsed.ethernet);
+    if (parsed.ethernet != nullptr) {
+        formatted.ethernet = new FormattedEthernet(format_ethernet(*parsed.ethernet));
+    }
 
     // Format IP layer
-    formatted.ipv4 = format_ipv4(parsed.ipv4);
+    if (parsed.ipv4 != nullptr) {
+        formatted.ipv4 = new FormattedIPv4(format_ipv4(*parsed.ipv4));
+    }
 
     // Format TCP/UDP layer
-    formatted.udp = format_udp(parsed.udp);
-    formatted.tcp = format_tcp(parsed.tcp);
+    if (parsed.udp != nullptr) {
+        formatted.udp = new FormattedUDP(format_udp(*parsed.udp));
+    }
+    if (parsed.tcp != nullptr) {
+        formatted.tcp = new FormattedTCP(format_tcp(*parsed.tcp));
+    }
 
     // Format data layer
     
     return formatted;
+}
+
+
+void cleanup_formatted_packet(FormattedPacket& formatted) {
+    delete formatted.ethernet;
+    delete formatted.ipv4;
+    delete formatted.udp;
+    delete formatted.tcp;
+
+    formatted.ethernet = nullptr;
+    formatted.ipv4 = nullptr;
+    formatted.udp = nullptr;
+    formatted.tcp = nullptr;
 }

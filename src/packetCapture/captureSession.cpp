@@ -67,7 +67,7 @@ pcap_if_t* get_device(pcap_if_t*& alldevs) {
 pcap_t* open_device(pcap_if_t*& device) {
     pcap_t *handle { nullptr };
     char errbuf[PCAP_ERRBUF_SIZE]{};
-    if ((handle = pcap_open(device->name, // name of the device
+    if ( (handle = pcap_open(device->name, // name of the device
             65536, // portion of the packet to capture
                     // 65536 guarantees that the whole packet will
                     // be captured on all the link layers
@@ -75,10 +75,35 @@ pcap_t* open_device(pcap_if_t*& device) {
             1000, // read timeout
             NULL, // authentication on the remote machine
             errbuf // error buffer
-            )) == NULL) {
+            )) == NULL ) {
         fprintf(stderr, "\nUnable to open the adapter. %s is not supported by Npcap\n", device->name);
         return nullptr;
     }
+
+    // ########################
+    // Compile TCP capture filter
+    struct bpf_program filter {};
+
+    if (pcap_compile(handle, &filter, "tcp", 0, PCAP_NETMASK_UNKNOWN) == -1) {
+        printf("Filter compilation failed: %s\n", pcap_geterr(handle));
+        pcap_close(handle);
+        return nullptr;
+    }
+
+    // Install TCP capture filter
+    if (pcap_setfilter(handle, &filter) == -1) {
+        printf("Setting filter failed: %s\n", pcap_geterr(handle));
+
+        pcap_freecode(&filter);
+        pcap_close(handle);
+        return nullptr;
+    }
+
+    // Free compiled filter resources
+    pcap_freecode(&filter);
+    // ########################
+
+
     printf("\nListening on %s...\n", device->description);
     return handle;
 }
@@ -87,16 +112,19 @@ pcap_t* open_device(pcap_if_t*& device) {
 void run_capture_session(pcap_t*& handle) {
     while (true) {
 
-    auto raw { capture_packet(handle) };
-    if (!raw) {
-        // No packet returned -> retry
-        continue;
-    }
+        auto raw { capture_packet(handle) };
+        if (!raw) {
+            // No packet returned -> retry
+            continue;
+        }
 
-    ParsedPacket parsed { parse_packet(*raw) };
-    FormattedPacket formatted { format_packet(parsed) };
-    print_packet(formatted);
-    //std::cout << static_cast<int>(parsed.ipv4.ttl) << std::endl;
-    // std::cout << "Formatted TTL: [" << formatted.ipv4.ttl << "]\n";
+        ParsedPacket parsed { parse_packet(*raw) };
+        FormattedPacket formatted { format_packet(parsed) };
+        print_packet(formatted);
+        //std::cout << static_cast<int>(parsed.ipv4.ttl) << std::endl;
+        // std::cout << "Formatted TTL: [" << formatted.ipv4.ttl << "]\n";
+        cleanup_formatted_packet(formatted);
+        cleanup_parsed_packet(parsed);
+            
     }
 }
