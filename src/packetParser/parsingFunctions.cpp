@@ -13,6 +13,19 @@ std::uint16_t read_uint16(const std::uint8_t*& data_ptr) {
     return value;
 }
 
+// Reads info stored as 4 bytes in Big-Endian order to a single uint32_t value then advances the ptr to the next byte
+std::uint32_t read_uint32(const std::uint8_t*& data_ptr) {
+    std::uint32_t value {
+        (static_cast<std::uint32_t>(data_ptr[0]) << 24) |
+        (static_cast<std::uint32_t>(data_ptr[1]) << 16) |
+        (static_cast<std::uint32_t>(data_ptr[2]) << 8)  |
+        static_cast<std::uint32_t>(data_ptr[3])
+    };
+
+    data_ptr += 4;
+    return value;
+}
+
 // Reads N bytes into N elements of a vector and updates ptr
 std::vector<std::uint8_t> read_address(const std::uint8_t*& data_ptr, std::size_t length) {
     std::vector<std::uint8_t> address(length);

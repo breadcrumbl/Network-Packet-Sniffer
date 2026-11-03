@@ -2,9 +2,10 @@
 #include "packetParser/packetParser.hpp"
 // My other headers
 #include "packetParser/ethernetParser.hpp"
-#include "packetParser/udpParser.hpp"
 #include "packetParser/ipParser.hpp"      
-#include "packetPrinter/ethernetPrinter.hpp"
+#include "packetParser/tcpParser.hpp"  
+#include "packetParser/udpParser.hpp"
+//#include "packetPrinter/ethernetPrinter.hpp"
 #include "packetCapture/packetCapture.hpp"
 // 3rd party headers
 #include <pcap.h>
@@ -38,12 +39,20 @@ ParsedPacket parse_packet(const CapturedPacket& raw) {
         parsed.ipv4 = *ipv4;
 
         // Parse TCP/UDP layer
+        // TO-DO: have this as enum, don't hardcode
         if (parsed.ipv4.protocol == 17) {
             auto udp { parse_udp(raw.data, parsed.ipv4.payload_offset) };
             if (!udp) {
                 return parsed;
             }
             parsed.udp = *udp;
+        } 
+        else if (parsed.ipv4.protocol == 6) {
+            auto tcp { parse_tcp(raw.data, parsed.ipv4.payload_offset) };
+            if (!tcp) {
+                return parsed;
+            }
+            parsed.tcp = *tcp;
         } 
     }
 

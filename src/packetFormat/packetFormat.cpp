@@ -3,6 +3,8 @@
 // My other headers
 #include "packetFormat/ethernetFormat.hpp"
 #include "packetFormat/ipFormat.hpp"
+#include "packetFormat/tcpFormat.hpp"
+#include "packetFormat/udpFormat.hpp"
 #include "packetFormat/timeFormat.hpp"
 #include "packetParser/packetParser.hpp"  // For ParsedPacket struct
 
@@ -19,6 +21,7 @@ FormattedPacket format_packet(const ParsedPacket& parsed) {
 
     // Format TCP/UDP layer
     formatted.udp = format_udp(parsed.udp);
+    formatted.tcp = format_tcp(parsed.tcp);
 
     // Format data layer
     

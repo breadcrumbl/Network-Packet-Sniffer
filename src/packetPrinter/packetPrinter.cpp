@@ -4,6 +4,7 @@
 #include "packetFormat/packetFormat.hpp"    // For FormattedPacket struct
 #include "packetPrinter/ethernetPrinter.hpp"
 #include "packetPrinter/ipPrinter.hpp"
+#include "packetPrinter/tcpPrinter.hpp"
 #include "packetPrinter/udpPrinter.hpp"
 #include "packetPrinter/timePrinter.hpp"
 // Standard library headers
@@ -20,7 +21,8 @@ void print_packet(const FormattedPacket& formatted) {
     print_ipv4(formatted.ipv4);
 
     // Print TCP/UDP
-    print_udp(formatted.udp);
+    //print_udp(formatted.udp);
+    print_tcp(formatted.tcp);
 
 
 }
